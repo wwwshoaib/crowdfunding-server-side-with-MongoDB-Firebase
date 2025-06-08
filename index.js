@@ -60,6 +60,17 @@ async function run() {
       }
     });
 
+
+    // GET method: for getting campaigns
+    app.get('/addCampaign', async (req, res) => {
+        const result = await campaignsCollection.find().toArray();
+        res.send(result);
+     
+    });
+
+
+
+
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
   } catch (err) {
