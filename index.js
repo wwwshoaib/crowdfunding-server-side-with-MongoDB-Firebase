@@ -42,10 +42,10 @@ async function run() {
         console.error('Insert error:', err);
         res.status(500).send({ message: 'Failed to insert user', error: err });
       }
-    });  
+    });
 
 
-     
+
     const campaignsCollection = database.collection("campaigns");
     // post method: for creating campaigns
     app.post('/addCampaign', async (req, res) => {
@@ -63,19 +63,60 @@ async function run() {
 
     // GET method: for getting campaigns
     app.get('/addCampaign', async (req, res) => {
-        const result = await campaignsCollection.find().toArray();
-        res.send(result);
-     
+      const result = await campaignsCollection.find().toArray();
+      res.send(result);
+
     });
 
-    //Delete method: for deleting a campaign from my campaigns
 
-    app.delete('/addCampaign/:id', async(req, res) => {
+    //Delete method: for deleting a campaign from my campaigns
+    app.delete('/addCampaign/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await campaignsCollection.deleteOne(query);
       res.send(result);
     })
+
+    //Collecting data that will be updated
+    app.get('/addCampaign/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await campaignsCollection.findOne(query);
+      res.send(result);
+    })
+
+
+    //updating a single field using PATCH method
+
+
+app.patch('/addCampaign/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const data = req.body;
+
+    const update = {
+      $set: {
+        photoURL: data?.photoURL,
+        campaign_title: data?.campaign_title,
+        campaign_type: data?.campaign_type,
+        description: data?.description,
+        donation_amount: data?.donation_amount,
+        deadline: data?.deadline,
+      }
+    };
+
+  
+    const result = await campaignsCollection.updateOne(query, update); 
+
+    res.status(200).json(result); // always send JSON
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ error: 'Failed to update campaign' }); // send JSON on error
+  }
+});
+
+
 
 
 
@@ -85,7 +126,7 @@ async function run() {
   } catch (err) {
     console.error('MongoDB connection error:', err);
   }
-  
+
 }
 run().catch(console.dir);
 
@@ -93,9 +134,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send("Crowd Funding server is running ...");
+  res.send("Crowd Funding server is running ...");
 })
 
 app.listen(port, () => {
-    console.log(`Crowd Funding Server is running on port: ${port}`)
+  console.log(`Crowd Funding Server is running on port: ${port}`)
 })
