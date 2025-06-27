@@ -45,6 +45,51 @@ async function run() {
     });
 
 
+     const donationsCollection = database.collection("donations");
+    // post method: for creating donation 
+   app.post('/myDonations', async (req, res) => {
+  const donation = req.body;
+  console.log('New Donation:', donation);
+
+  const donationAmount = parseFloat(donation.donation_amount);
+  const campaignId = donation.campaign_id;
+
+  try {
+    // Step 1: Insert donation
+    const result = await donationsCollection.insertOne(donation);
+
+    // Step 2: Update total_donation_gained in campaigns collection
+    const updateResult = await campaignsCollection.updateOne(
+      { _id: new ObjectId(campaignId) },
+      { $inc: { total_donation_gained: donationAmount } }
+    );
+
+    res.send({ insertedId: result.insertedId, campaignUpdate: updateResult });
+  } catch (err) {
+    console.error('Donation insert/update error:', err);
+    res.status(500).send({ message: 'Failed to insert donation and update campaign', error: err });
+  }
+});
+
+
+     // GET method: for getting campaigns
+    app.get('/myDonations', async (req, res) => {
+      const result = await donationsCollection.find().toArray();
+      res.send(result);
+
+    });
+
+    
+     // GET method: for getting users
+    app.get('/users', async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+
+    }); 
+
+    
+
+//
 
     const campaignsCollection = database.collection("campaigns");
     // post method: for creating campaigns
@@ -77,14 +122,29 @@ async function run() {
       res.send(result);
     })
 
-    //Collecting data that will be updated
-    app.get('/addCampaign/:id', async (req, res) => {
+   
+
+
+    //Collecting a data to show details
+    app.get('/campaign/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await campaignsCollection.findOne(query);
       res.send(result);
-    })
+    })  
 
+
+    
+    //Collecting a data to update
+    app.get('/update/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await campaignsCollection.findOne(query);
+      res.send(result);
+    })  
+
+
+   
 
     //updating a single field using PATCH method
 
