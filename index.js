@@ -31,6 +31,8 @@ async function run() {
     await client.connect();
     const database = client.db("crowdfundingDB");
     const usersCollection = database.collection("users");
+    const donationsCollection = database.collection("donations");
+    const campaignsCollection = database.collection("campaigns");
     // post method: for creating users
     app.post('/users', async (req, res) => {
       const user = req.body;
@@ -45,53 +47,58 @@ async function run() {
     });
 
 
-     const donationsCollection = database.collection("donations");
     // post method: for creating donation 
-   app.post('/myDonations', async (req, res) => {
-  const donation = req.body;
-  console.log('New Donation:', donation);
+    app.post('/myDonations', async (req, res) => {
+      const donation = req.body;
+      console.log('New Donation:', donation);
 
-  const donationAmount = parseFloat(donation.donation_amount);
-  const campaignId = donation.campaign_id;
+      const donationAmount = parseFloat(donation.donation_amount);
+      const campaignId = donation.campaign_id;
 
-  try {
-    // Step 1: Insert donation
-    const result = await donationsCollection.insertOne(donation);
+      try {
+        // Step 1: Insert donation
+        const result = await donationsCollection.insertOne(donation);
 
-    // Step 2: Update total_donation_gained in campaigns collection
-    const updateResult = await campaignsCollection.updateOne(
-      { _id: new ObjectId(campaignId) },
-      { $inc: { total_donation_gained: donationAmount } }
-    );
+        // Step 2: Update total_donation_gained in campaigns collection
+        const updateResult = await campaignsCollection.updateOne(
+          { _id: new ObjectId(campaignId) },
+          { $inc: { total_donation_gained: donationAmount } }
+        );
 
-    res.send({ insertedId: result.insertedId, campaignUpdate: updateResult });
-  } catch (err) {
-    console.error('Donation insert/update error:', err);
-    res.status(500).send({ message: 'Failed to insert donation and update campaign', error: err });
-  }
-});
-
-
-     // GET method: for getting campaigns
-    app.get('/myDonations', async (req, res) => {
-      const result = await donationsCollection.find().toArray();
-      res.send(result);
-
+        res.send({ insertedId: result.insertedId, campaignUpdate: updateResult });
+      } catch (err) {
+        console.error('Donation insert/update error:', err);
+        res.status(500).send({ message: 'Failed to insert donation and update campaign', error: err });
+      }
     });
 
+
+    // GET method: for getting campaigns
+    app.get('/myDonations', async (req, res) => {
+      try {
+        // Example logic
+        const donations = await donationsCollection.find({}).toArray();
+        res.json(donations);
+      } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
+    });  
+
     
-     // GET method: for getting users
+
+
+
+    // GET method: for getting users
     app.get('/users', async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
 
-    }); 
+    });
 
-    
 
-//
 
-    const campaignsCollection = database.collection("campaigns");
+    //
+
     // post method: for creating campaigns
     app.post('/addCampaign', async (req, res) => {
       const campaign = req.body;
@@ -122,7 +129,7 @@ async function run() {
       res.send(result);
     })
 
-   
+
 
 
     //Collecting a data to show details
@@ -131,50 +138,50 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await campaignsCollection.findOne(query);
       res.send(result);
-    })  
+    })
 
 
-    
+
     //Collecting a data to update
     app.get('/update/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await campaignsCollection.findOne(query);
       res.send(result);
-    })  
+    })
 
 
-   
+
 
     //updating a single field using PATCH method
 
 
-app.patch('/addCampaign/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const data = req.body;
+    app.patch('/addCampaign/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const data = req.body;
 
-    const update = {
-      $set: {
-        photoURL: data?.photoURL,
-        campaign_title: data?.campaign_title,
-        campaign_type: data?.campaign_type,
-        description: data?.description,
-        donation_amount: data?.donation_amount,
-        deadline: data?.deadline,
+        const update = {
+          $set: {
+            photoURL: data?.photoURL,
+            campaign_title: data?.campaign_title,
+            campaign_type: data?.campaign_type,
+            description: data?.description,
+            donation_amount: data?.donation_amount,
+            deadline: data?.deadline,
+          }
+        };
+
+
+        const result = await campaignsCollection.updateOne(query, update);
+
+        res.status(200).json(result); // always send JSON
+      } catch (err) {
+        console.error("Update error:", err);
+        res.status(500).json({ error: 'Failed to update campaign' }); // send JSON on error
       }
-    };
-
-  
-    const result = await campaignsCollection.updateOne(query, update); 
-
-    res.status(200).json(result); // always send JSON
-  } catch (err) {
-    console.error("Update error:", err);
-    res.status(500).json({ error: 'Failed to update campaign' }); // send JSON on error
-  }
-});
+    });
 
 
 
