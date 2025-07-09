@@ -77,7 +77,8 @@ async function run() {
     app.get('/myDonations', async (req, res) => {
       try {
         // Example logic
-        const donations = await donationsCollection.find({}).toArray();
+        const cursor = donationsCollection.find();
+        const donations = await cursor.toArray();
         res.json(donations);
       } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
