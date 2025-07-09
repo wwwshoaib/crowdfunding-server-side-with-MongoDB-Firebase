@@ -80,14 +80,7 @@ async function run() {
         const query = email ? { email } : {};
         const donations = await donationsCollection.find(query).toArray();
 
-        //to aggregate campaign with the donation
-        for(const donation of donations) {
-          const query1 = { _id: new ObjectId(donation.campaign_id)};
-          const campaign = await campaignsCollection.findOne(query1);
-          if(campaign) {
-          donation.campaign_title = campaign.campaign_title;
-          }
-        }
+       
 
         res.json(donations);
       } catch (error) {
