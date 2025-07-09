@@ -73,19 +73,20 @@ async function run() {
     });
 
 
-    // GET method: for getting campaigns
+    // GET method: for getting donations
     app.get('/myDonations', async (req, res) => {
       try {
-        // Example logic
-        const cursor = donationsCollection.find();
-        const donations = await cursor.toArray();
+        const email = req.query.email;
+        const query = email ? { email } : {};
+        const donations = await donationsCollection.find(query).toArray();
         res.json(donations);
       } catch (error) {
+        console.error('Error fetching donations:', error);
         res.status(500).json({ error: 'Internal Server Error' });
       }
-    });  
+    });
 
-    
+
 
 
 
